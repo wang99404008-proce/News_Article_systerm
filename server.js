@@ -1,6 +1,6 @@
 // server.js
 const express = require('express');
-const articlesRouter = require('./routes/articles');
+const articleRoutes = require('./routes/articles');
 
 const app = express();
 
