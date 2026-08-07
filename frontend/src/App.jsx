@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NewsEditor from './components/NewsEditor';
 
-const API_URL = 'http://localhost:3000/api/v1/articles';
+// 💡 改用環境變數，並提供本地開發的 Fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = `${API_BASE_URL}/api/v1/articles`;
+
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
 const TIME_SLOTS = [
@@ -95,7 +98,7 @@ export default function App() {
 
   const fetchUploadedImages = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/images');
+      const res = await fetch(`${API_BASE_URL}/api/v1/images`);
       const json = await res.json();
       if (json.success) {
         setUploadedImageList(json.data);
@@ -111,7 +114,7 @@ export default function App() {
 
   const fetchMamVideos = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/mam-videos');
+      const res = await fetch(`${API_BASE_URL}/api/v1/mam-videos`);
       const json = await res.json();
       if (json.success) setMamVideoList(json.data);
     } catch (err) {
@@ -213,7 +216,7 @@ export default function App() {
     formData.append('image', file);
     try {
       setUploading(true);
-      const res = await fetch('http://localhost:3000/api/v1/upload-image', { method: 'POST', body: formData });
+      const res = await fetch(`${API_BASE_URL}/api/v1/upload-image`, { method: 'POST', body: formData });
       const json = await res.json();
       if (json.success) {
         alert('🎉 CG 圖卡上傳成功！');
@@ -232,7 +235,7 @@ export default function App() {
     if (!previewImage || !editingFilename.trim()) return;
     try {
       setIsRenaming(true);
-      const res = await fetch(`http://localhost:3000/api/v1/images/${encodeURIComponent(previewImage.filename)}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/images/${encodeURIComponent(previewImage.filename)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newFilename: editingFilename })
