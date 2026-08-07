@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "@prisma/client": "^7.9.1",
+    "@tiptap/extension-image": "^3.29.2",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/react": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
+    "express": "^5.2.1",
+    "lodash.debounce": "^4.0.8",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "name": "news_article_systerm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "prisma": "^7.9.1"
+  }
+}

@@ -1,0 +1,39 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ArticleStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique @default("dev@example.com")
+  name      String    @default("測試記者")
+  articles  Article[]
+}
+
+model Article {
+  id           String   @id @default(uuid())
+  title        String
+  contentHtml  String
+  status       String   @default("DRAFT")
+  airDate      String?
+  newsFormat   String   @default("SOT")
+  reviewStatus String   @default("PENDING")
+  reviewer     String?  // 👈 新增：審稿者/編審姓名
+  authorId     String
+  author       User     @relation(fields: [authorId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
