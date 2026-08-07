@@ -3,7 +3,10 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 
-const API_URL = 'http://localhost:3000/api/v1/articles';
+// 💡 改用環境變數，並提供本地開發的 Fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = `${API_BASE_URL}/api/v1/articles`;
+
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
 const NEWS_FORMATS = [
