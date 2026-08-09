@@ -258,14 +258,6 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
     alert(`✅ 新聞已審核通過！`);
   };
 
-  const handleSetDropped = () => {
-    if (!window.confirm('確定要將新聞移至【抽稿區】嗎？')) return;
-    setArticleStatus('DROPPED');
-    handleSaveDraft(reviewStatus, null, 'DROPPED');
-    if (articleId && onArticleStatusChange) onArticleStatusChange(articleId, 'DROPPED');
-    setActiveTab('DROPPED');
-  };
-
   const handlePublish = async () => {
     if (!validateForm()) return;
     try {
@@ -404,7 +396,6 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
                 ＋加入排播
               </button>
 
-              <button onClick={handleSetDropped} style={{ padding: '5px 10px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>🚫 抽稿</button>
               <button onClick={handleApprove} style={{ padding: '5px 10px', backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>✅ 通過審稿</button>
               <button onClick={() => handleSaveDraft()} style={{ padding: '5px 10px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 存檔</button>
               <button onClick={handlePublish} style={{ padding: '5px 10px', backgroundColor: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>🚀 發布</button>
