@@ -146,11 +146,6 @@ export default function App() {
     }));
   };
 
-  // 💡 補上遺漏的 handleRemoveFromRundownByItem 函式
-  const handleRemoveFromRundownByItem = (rundownItemId) => {
-    updateCurrentRundown(currentRundown.filter(item => item.rundownItemId !== rundownItemId));
-  };
-
   // 💡 提供 NewsEditor「＋加入排播」按鈕的全域接收方法
   useEffect(() => {
     window.handleDirectAddToRundown = (newItem) => {
@@ -567,9 +562,22 @@ export default function App() {
           </div>
         )}
 
-        {/* 浮動視窗 */}
+        {/* 💡 升級版浮動視窗：自動適應手機置中與提高 zIndex 層級 */}
         {activeModal && (
-          <div style={{ position: 'absolute', left: `${modalPos.x}px`, top: `${modalPos.y}px`, width: `${modalSize.width}px`, height: `${modalSize.height}px`, backgroundColor: '#ffffff', borderRadius: '10px', boxShadow: '0 12px 35px rgba(0,0,0,0.22)', zIndex: 90, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1' }}>
+          <div style={{ 
+            position: 'absolute', 
+            left: isMobile ? '10px' : `${modalPos.x}px`, 
+            top: isMobile ? '55px' : `${modalPos.y}px`, 
+            width: isMobile ? 'calc(100vw - 20px)' : `${modalSize.width}px`, 
+            height: isMobile ? 'calc(100vh - 75px)' : `${modalSize.height}px`, 
+            backgroundColor: '#ffffff', 
+            borderRadius: '10px', 
+            boxShadow: '0 12px 35px rgba(0,0,0,0.22)', 
+            zIndex: 999, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            border: '1px solid #cbd5e1' 
+          }}>
             <div onMouseDown={handleStartDragModal} style={{ padding: '12px 18px', backgroundColor: '#0284c7', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'move' }}>
               <h3 style={{ margin: 0, fontSize: '15px' }}>
                 {activeModal === 'IMAGE_UPLOAD' && '🖼️ 新聞 CG 圖卡管理與上傳區'}
@@ -710,7 +718,7 @@ export default function App() {
               )}
             </div>
             
-            <div onMouseDown={handleStartResizeModal} style={{ position: 'absolute', right: 0, bottom: 0, width: '16px', height: '16px', cursor: 'nwse-resize' }} />
+            {!isMobile && <div onMouseDown={handleStartResizeModal} style={{ position: 'absolute', right: 0, bottom: 0, width: '16px', height: '16px', cursor: 'nwse-resize' }} />}
           </div>
         )}
 
