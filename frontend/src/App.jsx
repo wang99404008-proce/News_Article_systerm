@@ -146,6 +146,11 @@ export default function App() {
     }));
   };
 
+  // 💡 補上遺漏的 handleRemoveFromRundownByItem 函式
+  const handleRemoveFromRundownByItem = (rundownItemId) => {
+    updateCurrentRundown(currentRundown.filter(item => item.rundownItemId !== rundownItemId));
+  };
+
   // 💡 提供 NewsEditor「＋加入排播」按鈕的全域接收方法
   useEffect(() => {
     window.handleDirectAddToRundown = (newItem) => {
@@ -308,7 +313,6 @@ export default function App() {
     });
   };
 
-  // 💡 點擊抽稿按鈕：從 Rundown 移除，並將該文章標記為 DROPPED（抽稿）
   const handleDropItemFromRundown = (item, e) => {
     e.stopPropagation();
     updateCurrentRundown(currentRundown.filter(i => i.rundownItemId !== item.rundownItemId));
@@ -797,7 +801,6 @@ export default function App() {
                                     {statusConfig.label}
                                   </button>
                                 )}
-                                {/* 💡 手機/一般點擊即抽稿按鈕 */}
                                 {!isBreak && (
                                   <button onClick={(e) => handleDropItemFromRundown(item, e)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }} title="抽稿">🚫</button>
                                 )}
@@ -923,7 +926,6 @@ export default function App() {
                                 {statusConfig.label}
                               </button>
                             )}
-                            {/* 💡 電腦版 Rundown 項目上也加上「🚫 抽稿」按鈕 */}
                             {!isBreak && (
                               <button onClick={(e) => handleDropItemFromRundown(item, e)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '3px', padding: '3px 6px', fontSize: '10px', fontWeight: 'bold' }} title="抽稿">🚫</button>
                             )}
