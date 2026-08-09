@@ -58,6 +58,7 @@ export default function App() {
   const [previewImage, setPreviewImage] = useState(null);
   const [editingFilename, setEditingFilename] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
+  const [copyStatus, setCopyStatus] = useState(false); // 複製成功提示狀態
 
   const [slotMinutes, setSlotMinutes] = useState({ '0630': 15, '1200': 15, '1900': 15 });
   const [defaultBreakSeconds, setDefaultBreakSeconds] = useState(180);
@@ -146,12 +147,10 @@ export default function App() {
     }));
   };
 
-  // 💡 定義 handleRemoveFromRundownByItem
   const handleRemoveFromRundownByItem = (rundownItemId) => {
     updateCurrentRundown(currentRundown.filter(item => item.rundownItemId !== rundownItemId));
   };
 
-  // 提供 NewsEditor「＋加入排播」按鈕的全域接收方法
   useEffect(() => {
     window.handleDirectAddToRundown = (newItem) => {
       const updated = [...currentRundown, newItem];
@@ -292,6 +291,16 @@ export default function App() {
     } finally {
       setIsRenaming(false);
     }
+  };
+
+  // 💡 複製圖片網址到剪貼簿功能
+  const handleCopyImageUrl = (url) => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopyStatus(true);
+      setTimeout(() => setCopyStatus(false), 2000);
+    }).catch(err => {
+      alert('複製失敗');
+    });
   };
 
   const handleArticleStatusChange = (articleId, newStatus) => {
@@ -540,7 +549,7 @@ export default function App() {
               
               <div onClick={() => { setActiveModal('IMAGE_UPLOAD'); setIsSidebarOpen(false); }} style={{ backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '6px', border: '1px solid #bae6fd', cursor: 'pointer' }}>
                 <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0369a1' }}>🖼️ 新聞 CG 圖卡管理區</div>
-                <div style={{ fontSize: '11px', color: '#0369a1' }}>上傳 5MB 內圖卡，支援大圖預覽與更改檔名</div>
+                <div style={{ fontSize: '11px', color: '#0369a1' }}>上傳 5MB 內圖卡，支援大圖預覽、複製網址與更改檔名</div>
               </div>
 
               <div onClick={() => { setActiveModal('CALENDAR_LOGS'); setIsSidebarOpen(false); }} style={{ backgroundColor: '#f0fdf4', padding: '12px', borderRadius: '6px', border: '1px solid #bbf7d0', cursor: 'pointer' }}>
@@ -714,7 +723,14 @@ export default function App() {
                             <img src={previewImage.url} alt="" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
                           </div>
                           <input type="text" value={editingFilename} onChange={(e) => setEditingFilename(e.target.value)} style={{ padding: '5px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-                          <button onClick={handleSaveFilename} style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '5px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>儲存檔名</button>
+                          
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button onClick={handleSaveFilename} style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '6px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>儲存檔名</button>
+                            {/* 💡 新增：複製圖片網址按鈕 */}
+                            <button onClick={() => handleCopyImageUrl(previewImage.url)} style={{ flex: 1, backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '6px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>
+                              {copyStatus ? '✨ 已複製網址！' : '📋 複製網址'}
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -973,7 +989,6 @@ export default function App() {
 
             <div onMouseDown={startResizing('MIDDLE')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
 
-            {/* 💡 這裡已成功帶入 onRemoveFromRundownByItem 屬性 */}
             <section style={{ width: `${rightWidth}%`, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '12px' }}>
               <NewsEditor
                 key={selectedArticle?.id || 'new_article'}

@@ -64,6 +64,10 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
   const [searchTerm, setSearchTerm] = useState('');
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
 
+  // 💡 新增：用來控制從雲端選擇 CG 圖卡的彈跳視窗
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
+  const [availableImages, setAvailableImages] = useState([]);
+
   const [errors, setErrors] = useState({});
 
   const editor = useEditor({
@@ -277,10 +281,35 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
     }
   };
 
-  const addImage = useCallback(() => {
-    const url = window.prompt('請輸入新聞圖片網址 (URL)：');
-    if (url && editor) editor.chain().focus().setImage({ src: url }).run();
-  }, [editor]);
+  // 💡 點擊「插入圖片」按鈕：抓取雲端上傳的 CG 圖卡清單供使用者點選插入，或手動貼上網址
+  const openImagePicker = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/images`);
+      const json = await res.json();
+      if (json.success && json.data.length > 0) {
+        setAvailableImages(json.data);
+        setShowImagePickerModal(true);
+      } else {
+        // 如果還沒有上傳過圖片，退回原先的 URL 提示輸入框
+        const url = window.prompt('目前尚無上傳的 CG 圖卡，請直接輸入圖片網址 (URL)：');
+        if (url && editor) {
+          editor.chain().focus().setImage({ src: url }).run();
+        }
+      }
+    } catch (err) {
+      const url = window.prompt('請輸入新聞圖片網址 (URL)：');
+      if (url && editor) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+    }
+  };
+
+  const insertImageToEditor = (imgUrl) => {
+    if (editor) {
+      editor.chain().focus().setImage({ src: imgUrl }).run();
+    }
+    setShowImagePickerModal(false);
+  };
 
   const toFullWidthNum = (num) => String(num).replace(/[0-9]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0xfee0));
 
@@ -330,6 +359,33 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
         }
         .ProseMirror img:hover { transform: scale(1.03); border-color: #0284c7; }
       `}</style>
+
+      {/* 💡 CG 圖卡選擇對話框 */}
+      {showImagePickerModal && (
+        <div onClick={() => setShowImagePickerModal(false)} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '450px', maxHeight: '80vh', backgroundColor: '#fff', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+              <span style={{ fontWeight: 'bold', color: '#0f172a' }}>🖼️ 選擇要插入文稿的 CG 圖卡</span>
+              <button onClick={() => setShowImagePickerModal(false)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', overflowY: 'auto', maxHeight: '300px' }}>
+              {availableImages.map((img, idx) => (
+                <div key={idx} onClick={() => insertImageToEditor(img.url)} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px', cursor: 'pointer', textAlign: 'center', backgroundColor: '#f8fafc' }}>
+                  <img src={img.url} alt="" style={{ width: '100%', height: '90px', objectFit: 'cover', borderRadius: '4px', marginBottom: '4px' }} />
+                  <span style={{ fontSize: '11px', color: '#334155', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{img.filename}</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => {
+              setShowImagePickerModal(false);
+              const url = window.prompt('請直接輸入圖片網址 (URL)：');
+              if (url && editor) editor.chain().focus().setImage({ src: url }).run();
+            }} style={{ padding: '8px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>
+              🔗 手動輸入其他圖片網址
+            </button>
+          </div>
+        </div>
+      )}
 
       {previewImageUrl && (
         <div onClick={() => setPreviewImageUrl(null)} style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
@@ -396,10 +452,7 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
               </button>
 
               <button onClick={handleApprove} style={{ padding: '5px 10px', backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>✅ 通過審稿</button>
-              
-              {/* 💡 修改處：按鈕名稱改為「存至待審」 */}
               <button onClick={() => handleSaveDraft()} style={{ padding: '5px 10px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 存至待審</button>
-
               <button onClick={handlePublish} style={{ padding: '5px 10px', backgroundColor: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>🚀 發布</button>
             </div>
           </div>
@@ -415,7 +468,8 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
           </div>
 
           <div style={{ padding: '8px', background: '#f1f5f9', borderRadius: '6px 6px 0 0', display: 'flex', gap: '8px', border: '1px solid #cbd5e1', borderBottom: 'none', flexWrap: 'wrap', alignItems: 'center' }}>
-            <button onClick={addImage} style={{ padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}>📷 插入圖片</button>
+            {/* 💡 綁定點擊開啟 CG 圖卡選擇器的函式 */}
+            <button onClick={openImagePicker} style={{ padding: '4px 10px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', fontWeight: 'bold' }}>📷 插入圖片</button>
             {selectedText && <button onClick={annotateToFooterOnly} style={{ padding: '4px 10px', backgroundColor: '#ea580c', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>➕ 加入註解</button>}
             <button onClick={handleLoadSotTemplate} style={{ padding: '4px 10px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>📺 載入 SOT 範本</button>
           </div>
