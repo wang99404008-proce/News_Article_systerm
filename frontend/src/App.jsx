@@ -28,6 +28,16 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null); 
 
+  // 💡 響應式手機狀態與手機分頁
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileTab, setMobileTab] = useState('EDITOR'); // 'SLOTS' | 'RUNDOWN' | 'EDITOR'
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [modalPos, setModalPos] = useState({ x: window.innerWidth - 820, y: 50 });
   const [modalSize, setModalSize] = useState({ width: 800, height: 620 });
 
@@ -256,11 +266,6 @@ export default function App() {
     }
   };
 
-  const copyToClipboard = (url) => {
-    navigator.clipboard.writeText(url);
-    alert('📋 網址已複製到剪貼簿！');
-  };
-
   const currentRundown = rundownMapByDate[targetDate]?.[selectedSlot] || [];
 
   const updateCurrentRundown = (newRundown) => {
@@ -423,16 +428,14 @@ export default function App() {
     let totalSeconds = 0;
     currentRundown.forEach(item => {
       if (item.type === 'BREAK') {
-        totalSeconds += defaultBreakSeconds; // 使用參數設定的破口秒數
+        totalSeconds += defaultBreakSeconds; 
         return;
       }
       const html = item.contentHtml || '';
       const matches = html.match(/\[影音素材\][^)]*\(長度:\s*(\d+)s\)/g);
       if (matches) {
         matches.forEach(m => {
-          if (/roll/i.test(m)) {
-            return; 
-          }
+          if (/roll/i.test(m)) { return; }
           const secMatch = m.match(/(\d+)s/);
           if (secMatch) {
             const sec = parseInt(secMatch[1], 10);
@@ -496,10 +499,10 @@ export default function App() {
       <header style={{ height: '48px', backgroundColor: '#0284c7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', zIndex: 110 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ backgroundColor: isSidebarOpen ? '#0369a1' : 'transparent', color: '#ffffff', border: '1px solid #38bdf8', borderRadius: '4px', padding: '4px 10px', fontSize: '18px', cursor: 'pointer', fontWeight: 'bold' }}>⋮</button>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>📺 電視新聞編播系統 (NRCS Master Control)</h2>
-          <span style={{ fontSize: '12px', background: '#0369a1', padding: '3px 10px', borderRadius: '12px' }}>📅 {targetDate} ｜ {TIME_SLOTS.find(s => s.id === selectedSlot)?.name}</span>
+          <h2 style={{ margin: 0, fontSize: isMobile ? '14px' : '18px', fontWeight: 'bold' }}>📺 電視新聞編播系統</h2>
+          {!isMobile && <span style={{ fontSize: '12px', background: '#0369a1', padding: '3px 10px', borderRadius: '12px' }}>📅 {targetDate} ｜ {TIME_SLOTS.find(s => s.id === selectedSlot)?.name}</span>}
         </div>
-        <button onClick={toggleFullScreen} style={{ padding: '5px 12px', backgroundColor: '#0369a1', color: '#ffffff', border: '1px solid #38bdf8', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>{isFullscreen ? '↙↘ 退出全螢幕' : '↖↘ 滿框全螢幕'}</button>
+        <button onClick={toggleFullScreen} style={{ padding: '5px 12px', backgroundColor: '#0369a1', color: '#ffffff', border: '1px solid #38bdf8', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}>{isFullscreen ? '退出全螢幕' : '全螢幕'}</button>
       </header>
 
       {/* 主體區塊 */}
@@ -552,14 +555,12 @@ export default function App() {
                 {activeModal === 'CALENDAR_LOGS' && '📅 播報日誌月曆檢索'}
                 {activeModal === 'TIME_CONFIG' && '⏰ 播報秒數設定'}
                 {activeModal === 'SETTINGS' && '⚙️ 系統參數設定'}
-                {activeModal === 'BACKUP' && '🗂️ 過往歷史時段稿檔案總管 (保留 2 個月內完整時段)'}
+                {activeModal === 'BACKUP' && '🗂️ 過往歷史時段稿檔案總管'}
               </h3>
               <button onClick={() => setActiveModal(null)} style={{ backgroundColor: '#0369a1', color: '#fff', border: 'none', borderRadius: '4px', padding: '4px 8px', cursor: 'pointer' }}>✕ 關閉</button>
             </div>
             
             <div style={{ flex: 1, padding: '16px', overflowY: 'auto', backgroundColor: '#f8fafc' }}>
-              
-              {/* 💡 1. 播報秒數設定 */}
               {activeModal === 'TIME_CONFIG' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <p style={{ fontSize: '13px', color: '#334155', fontWeight: 'bold' }}>設定各節播報時段的預定標準時長（分鐘）：</p>
@@ -573,19 +574,17 @@ export default function App() {
                           onChange={(e) => setSlotMinutes({ ...slotMinutes, [slot.id]: parseInt(e.target.value) || 15 })}
                           style={{ width: '70px', padding: '6px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', fontWeight: 'bold' }}
                         />
-                        <span style={{ fontSize: '12px', color: '#64748b' }}>分鐘 (標準超時線)</span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>分鐘</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* 💡 2. 系統參數設定 */}
               {activeModal === 'SETTINGS' && (
                 <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ backgroundColor: '#fff', padding: '14px', border: '1px solid #cbd5e1', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontWeight: 'bold', color: '#0f172a' }}>廣告破口預設時長 (秒)：</label>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>控制點擊「＋破口」時預設自動計算的秒數（預設 180 秒 = 3分鐘）</span>
                     <input
                       type="number"
                       value={defaultBreakSeconds}
@@ -596,7 +595,6 @@ export default function App() {
 
                   <div style={{ backgroundColor: '#fff', padding: '14px', border: '1px solid #cbd5e1', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontWeight: 'bold', color: '#0f172a' }}>主播讀稿語速比例 (字/秒)：</label>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>用於估算純文字讀稿時的秒數對應比例</span>
                     <input
                       type="number"
                       value={charToSecRate}
@@ -609,27 +607,17 @@ export default function App() {
 
               {activeModal === 'BACKUP' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', height: '100%', fontFamily: 'monospace' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', background: '#e2e8f0', padding: '6px 10px', borderRadius: '4px', color: '#1e293b' }}>
-                    <span style={{ fontWeight: 'bold' }}>子目錄：</span>
-                    <input type="text" value={subDirectoryPath} onChange={(e) => setSubDirectoryPath(e.target.value)} style={{ flex: 1, padding: '3px 6px', fontSize: '11px', border: '1px solid #94a3b8', borderRadius: '3px', background: '#fff' }} />
-                  </div>
-                  <input type="text" placeholder="🔍 輸入關鍵字快速過濾日期或時段 (例: 2026-08 或 1200)..." value={historySearchKeyword} onChange={(e) => setHistorySearchKeyword(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' }} />
+                  <input type="text" placeholder="🔍 輸入關鍵字快速過濾日期或時段..." value={historySearchKeyword} onChange={(e) => setHistorySearchKeyword(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', background: '#fff' }} />
                   <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '6px', backgroundColor: '#ffffff', fontSize: '12px' }}>
                     {filteredTimeSlotFiles.map((item, idx) => (
-                      <div key={idx} onClick={() => { setTargetDate(item.date); setSelectedSlot(item.slot); setActiveModal(null); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', borderRadius: '3px' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0f2fe'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                      <div key={idx} onClick={() => { setTargetDate(item.date); setSelectedSlot(item.slot); setActiveModal(null); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 8px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', borderRadius: '3px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0369a1', fontWeight: 'bold' }}>
                           <span>🗂️</span>
                           <span>{item.date} {item.slot}</span>
                           <span style={{ color: '#64748b', fontWeight: 'normal', fontSize: '11px' }}>({item.slotName})</span>
                         </div>
-                        <div style={{ color: '#334155', fontSize: '11px' }}>
-                          {item.date.slice(5)} 06:55
-                        </div>
                       </div>
                     ))}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'right' }}>
-                    顯示最近 2 個月內共 {filteredTimeSlotFiles.length} 個歷史時段稿檔案
                   </div>
                 </div>
               )}
@@ -640,9 +628,6 @@ export default function App() {
                     <button onClick={() => { if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(calendarYear - 1); } else { setCalendarMonth(calendarMonth - 1); } }} style={{ padding: '6px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>◀ 上個月</button>
                     <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#0f172a' }}>{calendarYear} 年 {calendarMonth + 1} 月</span>
                     <button onClick={() => { if (calendarMonth === 11) { setCalendarMonth(0); setCalendarYear(calendarYear + 1); } else { setCalendarMonth(calendarMonth + 1); } }} style={{ padding: '6px 12px', background: '#0284c7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>下個月 ▶</button>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', fontWeight: 'bold', fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                    <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', flex: 1 }}>
                     {(() => {
@@ -659,7 +644,7 @@ export default function App() {
                           <div key={dateKey} style={{ backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px', minHeight: '80px', overflowY: 'auto' }}>
                             <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#0284c7', borderBottom: '1px solid #f1f5f9', paddingBottom: '2px' }}>{day}日</div>
                             {dayArticles.map(art => (
-                              <div key={art.id} onClick={() => { setTargetDate(dateKey); setSelectedArticle(art); setActiveModal(null); }} style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '3px', padding: '3px 6px', fontSize: '11px', color: '#0369a1', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>📰 {art.title || '(無標題)'}</div>
+                              <div key={art.id} onClick={() => { setTargetDate(dateKey); setSelectedArticle(art); setActiveModal(null); }} style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '3px', padding: '3px 6px', fontSize: '11px', color: '#0369a1', cursor: 'pointer' }}>📰 {art.title || '(無標題)'}</div>
                             ))}
                           </div>
                         );
@@ -673,7 +658,7 @@ export default function App() {
               {activeModal === 'IMAGE_UPLOAD' && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', backgroundColor: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #bae6fd' }}>
-                    <span style={{ fontSize: '12px', color: '#0369a1' }}>支援 5MB 內圖卡，14天自動清理</span>
+                    <span style={{ fontSize: '12px', color: '#0369a1' }}>支援 5MB 內圖卡</span>
                     <label style={{ backgroundColor: '#0284c7', color: '#fff', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
                       {uploading ? '上傳中...' : '📤 上傳新 CG 圖卡'}
                       <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={uploading} />
@@ -722,142 +707,257 @@ export default function App() {
           </div>
         )}
 
-        {/* 三欄位工作區 */}
-        <div ref={containerRef} style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
-          
-          {/* 左欄：時段選擇 */}
-          <section style={{ width: `${leftWidth}%`, backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '11px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontWeight: 'bold', fontSize: '14px' }}>⏰ 選擇播報時段</div>
-            <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-              <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ width: '100%', padding: '6px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
+        {/* 💡 響應式佈局切換：手機版 vs 電腦版 */}
+        {isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
+            {/* 手機版分頁切換列 */}
+            <div style={{ display: 'flex', backgroundColor: '#1e293b', color: '#fff', padding: '8px', gap: '6px', justifyContent: 'center', flexShrink: 0 }}>
+              <button onClick={() => setMobileTab('SLOTS')} style={{ padding: '6px 10px', background: mobileTab === 'SLOTS' ? '#0284c7' : '#334155', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>⏰ 時段選擇</button>
+              <button onClick={() => setMobileTab('RUNDOWN')} style={{ padding: '6px 10px', background: mobileTab === 'RUNDOWN' ? '#0284c7' : '#334155', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>📋 排播清單</button>
+              <button onClick={() => setMobileTab('EDITOR')} style={{ padding: '6px 10px', background: mobileTab === 'EDITOR' ? '#0284c7' : '#334155', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>✍️ 文稿編輯</button>
             </div>
-            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {TIME_SLOTS.map((slot) => (
-                <button key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ padding: '12px', backgroundColor: selectedSlot === slot.id ? '#0284c7' : '#f8fafc', color: selectedSlot === slot.id ? '#fff' : '#334155', border: selectedSlot === slot.id ? 'none' : '1px solid #e2e8f0', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{slot.name}</span>
-                  <span>{rundownMapByDate[targetDate]?.[slot.id]?.length || 0}條</span>
-                </button>
-              ))}
+
+            {/* 手機版分頁內容 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {mobileTab === 'SLOTS' && (
+                <section style={{ width: '100%', height: '100%', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                  <div style={{ padding: '11px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontWeight: 'bold', fontSize: '14px' }}>⏰ 選擇播報時段</div>
+                  <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ width: '100%', padding: '6px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
+                  </div>
+                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {TIME_SLOTS.map((slot) => (
+                      <button key={slot.id} onClick={() => { setSelectedSlot(slot.id); setMobileTab('RUNDOWN'); }} style={{ padding: '12px', backgroundColor: selectedSlot === slot.id ? '#0284c7' : '#f8fafc', color: selectedSlot === slot.id ? '#fff' : '#334155', border: selectedSlot === slot.id ? 'none' : '1px solid #e2e8f0', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{slot.name}</span>
+                        <span>{rundownMapByDate[targetDate]?.[slot.id]?.length || 0}條</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {mobileTab === 'RUNDOWN' && (
+                <section style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                  <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', borderBottom: '2px solid #e2e8f0', backgroundColor: '#fff' }}>
+                    <div style={{ padding: '10px 14px', backgroundColor: isOverTime ? '#fef2f2' : '#e0f2fe', borderBottom: '1px solid #bae6fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 'bold', color: isOverTime ? '#dc2626' : '#0369a1', fontSize: '12px' }}>
+                        ⏱️ 總時長：{rundownDuration.mins}分 {rundownDuration.secs}秒 {isOverTime && '⚠️ 超時'}
+                      </span>
+                      <button onClick={insertBreak} style={{ backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: 'bold' }}>＋破口</button>
+                    </div>
+
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+                      {currentRundown.length === 0 ? (
+                        <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', marginTop: '20px', border: '2px dashed #e2e8f0', padding: '20px', borderRadius: '8px' }}>
+                          此時段尚無排播新聞
+                        </div>
+                      ) : (
+                        currentRundown.map((item, index) => {
+                          const statusConfig = ITEM_STATUSES[item.playStatus || 'UNPLAYED'];
+                          const isBreak = item.type === 'BREAK';
+
+                          return (
+                            <div
+                              key={item.rundownItemId || index}
+                              onClick={() => { if(!isBreak) { setSelectedArticle(item); setMobileTab('EDITOR'); } }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '8px 10px',
+                                marginBottom: '6px',
+                                borderRadius: '6px',
+                                borderLeft: `5px solid ${isBreak ? '#f97316' : statusConfig.color}`,
+                                backgroundColor: isBreak ? '#fff7ed' : '#fff',
+                                border: '1px solid #e2e8f0',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <span style={{ width: '20px', fontWeight: 'bold', color: '#0284c7', fontSize: '12px' }}>{index + 1}</span>
+                              <div style={{ flex: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 'bold' }}>
+                                {item.title}
+                              </div>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {!isBreak && (
+                                  <button onClick={(e) => toggleStatus(item.rundownItemId, e)} style={{ padding: '2px 6px', backgroundColor: statusConfig.bg, color: statusConfig.color, border: 'none', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold' }}>
+                                    {statusConfig.label}
+                                  </button>
+                                )}
+                                <button onClick={(e) => removeFromRundown(item.rundownItemId, e)} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }}>✕</button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 0.8, backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ padding: '8px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '12px', fontWeight: 'bold' }}>🎥 MAM 影音資產庫</div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                      {mamVideoList.map((vid, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => setPlayingVideo(vid)}
+                          style={{ padding: '8px 10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '4px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}
+                        >
+                          <span>🎬 {vid.filename}</span>
+                          <span style={{ fontSize: '10px', color: '#0284c7', backgroundColor: '#e0f2fe', padding: '2px 4px', borderRadius: '3px' }}>播放</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {mobileTab === 'EDITOR' && (
+                <section style={{ width: '100%', height: '100%', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '12px' }}>
+                  <NewsEditor
+                    key={selectedArticle?.id || 'new_article'}
+                    initialArticle={selectedArticle}
+                    allArticles={articles}
+                    onSelectArticle={(art) => setSelectedArticle(art)}
+                    onSaveSuccess={handleSaveSuccess}
+                    onCreateNew={handleCreateNew}
+                    onRemoveFromRundownByItem={handleRemoveFromRundownByItem}
+                    onArticleStatusChange={handleArticleStatusChange}
+                  />
+                </section>
+              )}
             </div>
-          </section>
-
-          <div onMouseDown={startResizing('LEFT')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
-
-          {/* 中欄：Rundown + MAM 影片庫 */}
-          <section style={{ width: `${middleWidth}%`, display: 'flex', flexDirection: 'column', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+          </div>
+        ) : (
+          // 電腦版三欄位工作區
+          <div ref={containerRef} style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
             
-            {/* Rundown 列表 */}
-            <div onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }} onDrop={(e) => handleDrop(e, currentRundown.length)} style={{ flex: 1.2, display: 'flex', flexDirection: 'column', borderBottom: '2px solid #e2e8f0', backgroundColor: isDraggingOver ? '#f0f9ff' : '#fff' }}>
-              <div style={{ padding: '10px 14px', backgroundColor: isOverTime ? '#fef2f2' : '#e0f2fe', borderBottom: '1px solid #bae6fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontWeight: 'bold', color: isOverTime ? '#dc2626' : '#0369a1', fontSize: '13px' }}>
-                    ⏱️ 總時長：{rundownDuration.mins}分 {rundownDuration.secs}秒 
-                    {isOverTime && <span style={{ marginLeft: '6px', color: '#dc2626' }}>⚠️ 超時！</span>}
-                  </span>
-                </div>
-                <button onClick={insertBreak} style={{ backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>＋破口 ({Math.floor(defaultBreakSeconds/60)}分)</button>
+            {/* 左欄：時段選擇 */}
+            <section style={{ width: `${leftWidth}%`, backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '11px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontWeight: 'bold', fontSize: '14px' }}>⏰ 選擇播報時段</div>
+              <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                <input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ width: '100%', padding: '6px', fontSize: '13px', fontWeight: 'bold', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
               </div>
-
-              <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-                {currentRundown.length === 0 ? (
-                  <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', marginTop: '20px', border: '2px dashed #e2e8f0', padding: '20px', borderRadius: '8px' }}>
-                    👇 此時段尚無排播新聞，請從右側文稿或待審區拖拉新聞至此！
-                  </div>
-                ) : (
-                  currentRundown.map((item, index) => {
-                    const statusConfig = ITEM_STATUSES[item.playStatus || 'UNPLAYED'];
-                    const isBreak = item.type === 'BREAK';
-
-                    return (
-                      <div
-                        key={item.rundownItemId || index}
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('source', 'RUNDOWN_ITEM');
-                          e.dataTransfer.setData('rundownItem', JSON.stringify(item));
-                        }}
-                        onClick={() => !isBreak && setSelectedArticle(item)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          padding: '6px 10px',
-                          marginBottom: '6px',
-                          borderRadius: '6px',
-                          borderLeft: `5px solid ${isBreak ? '#f97316' : statusConfig.color}`,
-                          backgroundColor: isBreak ? '#fff7ed' : '#fff',
-                          border: '1px solid #e2e8f0',
-                          cursor: 'pointer',
-                          transition: 'all 0.1s'
-                        }}
-                      >
-                        <span style={{ width: '20px', fontWeight: 'bold', color: '#0284c7', fontSize: '12px' }}>{index + 1}</span>
-                        
-                        <div style={{ flex: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 'bold' }}>
-                          {item.title}
-                        </div>
-
-                        {/* 順序控制按鈕 (▲ 上移 / ▼ 下移) */}
-                        <div style={{ display: 'flex', gap: '2px', marginRight: '6px' }}>
-                          <button onClick={(e) => moveItemUp(index, e)} title="往上一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 5px', fontSize: '10px', cursor: 'pointer' }}>▲</button>
-                          <button onClick={(e) => moveItemDown(index, e)} title="往下一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 5px', fontSize: '10px', cursor: 'pointer' }}>▼</button>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          {!isBreak && (
-                            <button onClick={(e) => toggleStatus(item.rundownItemId, e)} style={{ padding: '2px 6px', backgroundColor: statusConfig.bg, color: statusConfig.color, border: 'none', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold' }}>
-                              {statusConfig.label}
-                            </button>
-                          )}
-                          <button onClick={(e) => removeFromRundown(item.rundownItemId, e)} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }}>
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* 下半部：MAM 影片庫 */}
-            <div style={{ flex: 0.8, backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '8px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '12px', fontWeight: 'bold' }}>🎥 MAM 影音資產庫 (可直接拖拉進右側文稿)</div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                {mamVideoList.map((vid, idx) => (
-                  <div
-                    key={idx}
-                    draggable
-                    onDragStart={(e) => e.dataTransfer.setData('mamVideo', JSON.stringify(vid))}
-                    onClick={() => setPlayingVideo(vid)}
-                    title="按住可拖拉至文稿中，點擊可預覽播放"
-                    style={{ padding: '6px 10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '4px', marginBottom: '4px', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}
-                  >
-                    <span>🎬 {vid.filename}</span>
-                    <span style={{ fontSize: '10px', color: '#0284c7', backgroundColor: '#e0f2fe', padding: '2px 4px', borderRadius: '3px' }}>播放 ↗</span>
-                  </div>
+              <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {TIME_SLOTS.map((slot) => (
+                  <button key={slot.id} onClick={() => setSelectedSlot(slot.id)} style={{ padding: '12px', backgroundColor: selectedSlot === slot.id ? '#0284c7' : '#f8fafc', color: selectedSlot === slot.id ? '#fff' : '#334155', border: selectedSlot === slot.id ? 'none' : '1px solid #e2e8f0', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{slot.name}</span>
+                    <span>{rundownMapByDate[targetDate]?.[slot.id]?.length || 0}條</span>
+                  </button>
                 ))}
               </div>
-            </div>
+            </section>
 
-          </section>
+            <div onMouseDown={startResizing('LEFT')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
 
-          <div onMouseDown={startResizing('MIDDLE')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
+            {/* 中欄：Rundown + MAM 影片庫 */}
+            <section style={{ width: `${middleWidth}%`, display: 'flex', flexDirection: 'column', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+              
+              <div onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }} onDrop={(e) => handleDrop(e, currentRundown.length)} style={{ flex: 1.2, display: 'flex', flexDirection: 'column', borderBottom: '2px solid #e2e8f0', backgroundColor: isDraggingOver ? '#f0f9ff' : '#fff' }}>
+                <div style={{ padding: '10px 14px', backgroundColor: isOverTime ? '#fef2f2' : '#e0f2fe', borderBottom: '1px solid #bae6fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontWeight: 'bold', color: isOverTime ? '#dc2626' : '#0369a1', fontSize: '13px' }}>
+                      ⏱️ 總時長：{rundownDuration.mins}分 {rundownDuration.secs}秒 
+                      {isOverTime && <span style={{ marginLeft: '6px', color: '#dc2626' }}>⚠️ 超時！</span>}
+                    </span>
+                  </div>
+                  <button onClick={insertBreak} style={{ backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>＋破口 ({Math.floor(defaultBreakSeconds/60)}分)</button>
+                </div>
 
-          {/* 右欄：整合型文稿編輯區 */}
-          <section style={{ width: `${rightWidth}%`, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '12px' }}>
-            <NewsEditor
-              key={selectedArticle?.id || 'new_article'}
-              initialArticle={selectedArticle}
-              allArticles={articles}
-              onSelectArticle={(art) => setSelectedArticle(art)}
-              onSaveSuccess={handleSaveSuccess}
-              onCreateNew={handleCreateNew}
-              onRemoveFromRundownByItem={handleRemoveFromRundownByItem}
-              onArticleStatusChange={handleArticleStatusChange}
-            />
-          </section>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+                  {currentRundown.length === 0 ? (
+                    <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', marginTop: '20px', border: '2px dashed #e2e8f0', padding: '20px', borderRadius: '8px' }}>
+                      👇 此時段尚無排播新聞，請從右側文稿或待審區拖拉新聞至此！
+                    </div>
+                  ) : (
+                    currentRundown.map((item, index) => {
+                      const statusConfig = ITEM_STATUSES[item.playStatus || 'UNPLAYED'];
+                      const isBreak = item.type === 'BREAK';
 
-        </div>
+                      return (
+                        <div
+                          key={item.rundownItemId || index}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('source', 'RUNDOWN_ITEM');
+                            e.dataTransfer.setData('rundownItem', JSON.stringify(item));
+                          }}
+                          onClick={() => !isBreak && setSelectedArticle(item)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '6px 10px',
+                            marginBottom: '6px',
+                            borderRadius: '6px',
+                            borderLeft: `5px solid ${isBreak ? '#f97316' : statusConfig.color}`,
+                            backgroundColor: isBreak ? '#fff7ed' : '#fff',
+                            border: '1px solid #e2e8f0',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <span style={{ width: '20px', fontWeight: 'bold', color: '#0284c7', fontSize: '12px' }}>{index + 1}</span>
+                          
+                          <div style={{ flex: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 'bold' }}>
+                            {item.title}
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '2px', marginRight: '6px' }}>
+                            <button onClick={(e) => moveItemUp(index, e)} title="往上一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 5px', fontSize: '10px', cursor: 'pointer' }}>▲</button>
+                            <button onClick={(e) => moveItemDown(index, e)} title="往下一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 5px', fontSize: '10px', cursor: 'pointer' }}>▼</button>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {!isBreak && (
+                              <button onClick={(e) => toggleStatus(item.rundownItemId, e)} style={{ padding: '2px 6px', backgroundColor: statusConfig.bg, color: statusConfig.color, border: 'none', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold' }}>
+                                {statusConfig.label}
+                              </button>
+                            )}
+                            <button onClick={(e) => removeFromRundown(item.rundownItemId, e)} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }}>✕</button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* 下半部：MAM 影片庫 */}
+              <div style={{ flex: 0.8, backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '8px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '12px', fontWeight: 'bold' }}>🎥 MAM 影音資產庫</div>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                  {mamVideoList.map((vid, idx) => (
+                    <div
+                      key={idx}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData('mamVideo', JSON.stringify(vid))}
+                      onClick={() => setPlayingVideo(vid)}
+                      style={{ padding: '6px 10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '4px', marginBottom: '4px', cursor: 'grab', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}
+                    >
+                      <span>🎬 {vid.filename}</span>
+                      <span style={{ fontSize: '10px', color: '#0284c7', backgroundColor: '#e0f2fe', padding: '2px 4px', borderRadius: '3px' }}>播放 ↗</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </section>
+
+            <div onMouseDown={startResizing('MIDDLE')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
+
+            {/* 右欄：整合型文稿編輯區 */}
+            <section style={{ width: `${rightWidth}%`, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '12px' }}>
+              <NewsEditor
+                key={selectedArticle?.id || 'new_article'}
+                initialArticle={selectedArticle}
+                allArticles={articles}
+                onSelectArticle={(art) => setSelectedArticle(art)}
+                onSaveSuccess={handleSaveSuccess}
+                onCreateNew={handleCreateNew}
+                onRemoveFromRundownByItem={handleRemoveFromRundownByItem}
+                onArticleStatusChange={handleArticleStatusChange}
+              />
+            </section>
+
+          </div>
+        )}
+
       </div>
     </div>
   );
