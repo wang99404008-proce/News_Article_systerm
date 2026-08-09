@@ -236,7 +236,7 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
         setArticleId(json.data.id);
         setReviewStatus(targetReviewStatus);
         setArticleStatus(targetStatus);
-        setSaveStatus(`已儲存 (${new Date().toLocaleTimeString()})`);
+        setSaveStatus(`已存至待審 (${new Date().toLocaleTimeString()})`);
         if (onSaveSuccess) onSaveSuccess(json.data);
       }
     } catch (err) {
@@ -357,11 +357,10 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
             <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '4px', fontWeight: 'bold' }}>🖐️ 編輯：{title || '新草稿'}</span>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               
-              {/* 💡 點擊加入排播按鈕：自動解除抽稿並加入 Rundown */}
               <button 
                 onClick={() => {
                   if (!articleId) {
-                    alert('⚠️ 請先點擊「存檔」產生稿件編號後，才能加入 Rundown！');
+                    alert('⚠️ 請先點擊「存至待審」產生稿件編號後，才能加入 Rundown！');
                     return;
                   }
 
@@ -397,7 +396,10 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
               </button>
 
               <button onClick={handleApprove} style={{ padding: '5px 10px', backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>✅ 通過審稿</button>
-              <button onClick={() => handleSaveDraft()} style={{ padding: '5px 10px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 存檔</button>
+              
+              {/* 💡 修改處：按鈕名稱改為「存至待審」 */}
+              <button onClick={() => handleSaveDraft()} style={{ padding: '5px 10px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 存至待審</button>
+
               <button onClick={handlePublish} style={{ padding: '5px 10px', backgroundColor: '#16a34a', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>🚀 發布</button>
             </div>
           </div>
