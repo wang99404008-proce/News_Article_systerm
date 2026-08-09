@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NewsEditor from './components/NewsEditor';
 
-// 💡 改用環境變數，並提供本地開發的 Fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const API_URL = `${API_BASE_URL}/api/v1/articles`;
 
@@ -28,9 +27,8 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null); 
 
-  // 💡 響應式手機狀態與手機分頁
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [mobileTab, setMobileTab] = useState('EDITOR'); // 'SLOTS' | 'RUNDOWN' | 'EDITOR'
+  const [mobileTab, setMobileTab] = useState('EDITOR');
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -61,10 +59,9 @@ export default function App() {
   const [editingFilename, setEditingFilename] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
-  // 💡 參數設定狀態
   const [slotMinutes, setSlotMinutes] = useState({ '0630': 15, '1200': 15, '1900': 15 });
   const [defaultBreakSeconds, setDefaultBreakSeconds] = useState(180);
-  const [charToSecRate, setCharToSecRate] = useState(4); // 每秒約4個字
+  const [charToSecRate, setCharToSecRate] = useState(4);
 
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
@@ -137,6 +134,32 @@ export default function App() {
     fetchUploadedImages();
     fetchMamVideos();
   }, []);
+
+  const currentRundown = rundownMapByDate[targetDate]?.[selectedSlot] || [];
+  const updateCurrentRundown = (newRundown) => {
+    setRundownMapByDate((prev) => ({
+      ...prev,
+      [targetDate]: {
+        ...(prev[targetDate] || { '0630': [], '1200': [], '1900': [] }),
+        [selectedSlot]: newRundown
+      }
+    }));
+  };
+
+  // 💡 完整保留的 useEffect：提供 NewsEditor「＋加入排播」按鈕的全域接收方法
+  useEffect(() => {
+    window.handleDirectAddToRundown = (newItem) => {
+      const updated = [...currentRundown, newItem];
+      updateCurrentRundown(updated);
+      alert(`🎉 成功將「${newItem.title}」加入 ${targetDate} (${selectedSlot}) 的 Rundown！`);
+      if (isMobile) {
+        setMobileTab('RUNDOWN');
+      }
+    };
+    return () => {
+      delete window.handleDirectAddToRundown;
+    };
+  }, [currentRundown, targetDate, selectedSlot, isMobile]);
 
   useEffect(() => {
     const handleMouseMoveWindow = (e) => {
@@ -264,18 +287,6 @@ export default function App() {
     } finally {
       setIsRenaming(false);
     }
-  };
-
-  const currentRundown = rundownMapByDate[targetDate]?.[selectedSlot] || [];
-
-  const updateCurrentRundown = (newRundown) => {
-    setRundownMapByDate((prev) => ({
-      ...prev,
-      [targetDate]: {
-        ...(prev[targetDate] || { '0630': [], '1200': [], '1900': [] }),
-        [selectedSlot]: newRundown
-      }
-    }));
   };
 
   const handleArticleStatusChange = (articleId, newStatus) => {
@@ -707,17 +718,15 @@ export default function App() {
           </div>
         )}
 
-        {/* 💡 響應式佈局切換：手機版 vs 電腦版 */}
+        {/* 響應式佈局切換 */}
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
-            {/* 手機版分頁切換列 */}
             <div style={{ display: 'flex', backgroundColor: '#1e293b', color: '#fff', padding: '8px', gap: '6px', justifyContent: 'center', flexShrink: 0 }}>
               <button onClick={() => setMobileTab('SLOTS')} style={{ padding: '6px 10px', background: mobileTab === 'SLOTS' ? '#0284c7' : '#334155', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>⏰ 時段選擇</button>
               <button onClick={() => setMobileTab('RUNDOWN')} style={{ padding: '6px 10px', background: mobileTab === 'RUNDOWN' ? '#0284c7' : '#334155', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>📋 排播清單</button>
               <button onClick={() => setMobileTab('EDITOR')} style={{ padding: '6px 10px', background: mobileTab === 'EDITOR' ? '#0284c7' : '#334155', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>✍️ 文稿編輯</button>
             </div>
 
-            {/* 手機版分頁內容 */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {mobileTab === 'SLOTS' && (
                 <section style={{ width: '100%', height: '100%', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
@@ -826,10 +835,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          // 電腦版三欄位工作區
           <div ref={containerRef} style={{ display: 'flex', flex: 1, overflow: 'hidden', backgroundColor: '#f1f5f9' }}>
-            
-            {/* 左欄：時段選擇 */}
             <section style={{ width: `${leftWidth}%`, backgroundColor: '#ffffff', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '11px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontWeight: 'bold', fontSize: '14px' }}>⏰ 選擇播報時段</div>
               <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
@@ -847,9 +853,7 @@ export default function App() {
 
             <div onMouseDown={startResizing('LEFT')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
 
-            {/* 中欄：Rundown + MAM 影片庫 */}
             <section style={{ width: `${middleWidth}%`, display: 'flex', flexDirection: 'column', backgroundColor: '#ffffff', overflow: 'hidden' }}>
-              
               <div onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }} onDrop={(e) => handleDrop(e, currentRundown.length)} style={{ flex: 1.2, display: 'flex', flexDirection: 'column', borderBottom: '2px solid #e2e8f0', backgroundColor: isDraggingOver ? '#f0f9ff' : '#fff' }}>
                 <div style={{ padding: '10px 14px', backgroundColor: isOverTime ? '#fef2f2' : '#e0f2fe', borderBottom: '1px solid #bae6fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -864,7 +868,7 @@ export default function App() {
                 <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
                   {currentRundown.length === 0 ? (
                     <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', marginTop: '20px', border: '2px dashed #e2e8f0', padding: '20px', borderRadius: '8px' }}>
-                      👇 此時段尚無排播新聞，請從右側文稿或待審區拖拉新聞至此！
+                      👇 此時段尚無排播新聞，請點擊文稿上方的「＋加入排播」或從右側拖拉至此！
                     </div>
                   ) : (
                     currentRundown.map((item, index) => {
@@ -918,7 +922,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 下半部：MAM 影片庫 */}
               <div style={{ flex: 0.8, backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '8px 14px', backgroundColor: '#1e293b', color: '#ffffff', fontSize: '12px', fontWeight: 'bold' }}>🎥 MAM 影音資產庫</div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
@@ -941,7 +944,6 @@ export default function App() {
 
             <div onMouseDown={startResizing('MIDDLE')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
 
-            {/* 右欄：整合型文稿編輯區 */}
             <section style={{ width: `${rightWidth}%`, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '12px' }}>
               <NewsEditor
                 key={selectedArticle?.id || 'new_article'}

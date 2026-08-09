@@ -3,7 +3,6 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 
-// 💡 改用環境變數，並提供本地開發的 Fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const API_URL = `${API_BASE_URL}/api/v1/articles`;
 
@@ -90,14 +89,13 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
     },
   });
 
-  // 💡 支援將 MAM 影片拖拉進文稿編輯器，並自動寫入影片真實帶長
   const handleEditorDrop = (e) => {
     e.preventDefault();
     const videoData = e.dataTransfer.getData('mamVideo');
     if (videoData && editor) {
       try {
         const video = JSON.parse(videoData);
-        const realDuration = video.duration || 30; // 讀取真實影片秒數
+        const realDuration = video.duration || 30;
         const videoTag = `<p style="background: #e0f2fe; color: #0369a1; padding: 6px 10px; border-radius: 6px; font-weight: bold; border: 1px solid #bae6fd; display: inline-block; margin: 6px 0;">🎬 [影音素材] ${video.filename} (長度: ${realDuration}s)</p>`;
         editor.chain().focus().insertContent(videoTag).run();
       } catch (err) {
@@ -204,16 +202,12 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
     }
   };
 
-  // 💡 表單驗證：若文章已通過審稿 (APPROVED)，則放寬審稿者必填限制
   const validateForm = () => {
     const newErrors = {};
     if (!title.trim()) newErrors.title = '請填寫新聞標題！';
-    
-    // 如果尚未通過審稿，才強制要求填寫審稿者姓名
     if (reviewStatus !== 'APPROVED' && !reviewer.trim()) {
       newErrors.reviewer = '請填寫審稿者姓名！';
     }
-
     if (!newsFormat) newErrors.newsFormat = '請選擇新聞格式！';
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -262,13 +256,6 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
     handleSaveDraft('APPROVED', newHtml, 'DRAFT');
     setActiveTab('PLAYED');
     alert(`✅ 新聞已審核通過！`);
-  };
-
-  const handleReject = () => {
-    setReviewStatus('REJECTED');
-    handleSaveDraft('REJECTED', null, 'DRAFT');
-    setActiveTab('REVIEW');
-    alert('↩ 該新聞已標示為「退回修改」！');
   };
 
   const handleSetDropped = () => {
@@ -374,9 +361,41 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
 
       {activeTab === 'WRITE' && (
         <div>
-          <div draggable onDragStart={handleCurrentArticleDragStart} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', padding: '8px 12px', backgroundColor: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '6px', cursor: 'grab' }}>
-            <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '4px', fontWeight: 'bold' }}>🖐️ 按住拖拉排播 ｜ 編輯：{title || '新草稿'}</span>
-            <div style={{ display: 'flex', gap: '6px' }}>
+          <div draggable onDragStart={handleCurrentArticleDragStart} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', padding: '8px 12px', backgroundColor: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '6px', cursor: 'grab', flexWrap: 'wrap', gap: '6px' }}>
+            <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '4px', fontWeight: 'bold' }}>🖐️ 編輯：{title || '新草稿'}</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              
+              {/* 💡 新增：點擊直接加入 Rundown 按鈕 */}
+              <button 
+                onClick={() => {
+                  if (!articleId) {
+                    alert('⚠️ 請先點擊「存檔」產生稿件編號後，才能加入 Rundown！');
+                    return;
+                  }
+                  const currentArticlePayload = {
+                    id: articleId,
+                    title: title || '（無標題新聞）',
+                    contentHtml: editor ? editor.getHTML() : '',
+                    airDate,
+                    newsFormat,
+                    reviewStatus,
+                    reviewer,
+                    status: articleStatus,
+                    rundownItemId: `item_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    playStatus: 'UNPLAYED',
+                    type: 'NEWS'
+                  };
+                  if (window.handleDirectAddToRundown) {
+                    window.handleDirectAddToRundown(currentArticlePayload);
+                  } else {
+                    alert('✅ 稿件已準備就緒！');
+                  }
+                }} 
+                style={{ padding: '5px 10px', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                ＋加入排播
+              </button>
+
               <button onClick={handleSetDropped} style={{ padding: '5px 10px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>🚫 抽稿</button>
               <button onClick={handleApprove} style={{ padding: '5px 10px', backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>✅ 通過審稿</button>
               <button onClick={() => handleSaveDraft()} style={{ padding: '5px 10px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>💾 存檔</button>
@@ -400,7 +419,6 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
             <button onClick={handleLoadSotTemplate} style={{ padding: '4px 10px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' }}>📺 載入 SOT 範本</button>
           </div>
 
-          {/* 💡 支援拖放 MAM 影片進編輯器 */}
           <div onDragOver={(e) => e.preventDefault()} onDrop={handleEditorDrop}>
             <EditorContent editor={editor} style={{ border: '1px solid #cbd5e1', borderRadius: '0 0 6px 6px', padding: '16px', minHeight: '380px', backgroundColor: '#fff', lineHeight: '1.6' }} />
           </div>
