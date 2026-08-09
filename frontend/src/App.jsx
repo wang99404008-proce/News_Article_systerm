@@ -146,7 +146,12 @@ export default function App() {
     }));
   };
 
-  // 💡 提供 NewsEditor「＋加入排播」按鈕的全域接收方法
+  // 💡 定義 handleRemoveFromRundownByItem
+  const handleRemoveFromRundownByItem = (rundownItemId) => {
+    updateCurrentRundown(currentRundown.filter(item => item.rundownItemId !== rundownItemId));
+  };
+
+  // 提供 NewsEditor「＋加入排播」按鈕的全域接收方法
   useEffect(() => {
     window.handleDirectAddToRundown = (newItem) => {
       const updated = [...currentRundown, newItem];
@@ -562,7 +567,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 💡 升級版浮動視窗：自動適應手機置中與提高 zIndex 層級 */}
+        {/* 浮動視窗 */}
         {activeModal && (
           <div style={{ 
             position: 'absolute', 
@@ -968,6 +973,7 @@ export default function App() {
 
             <div onMouseDown={startResizing('MIDDLE')} style={{ width: '6px', cursor: 'col-resize', backgroundColor: '#e2e8f0' }} />
 
+            {/* 💡 這裡已成功帶入 onRemoveFromRundownByItem 屬性 */}
             <section style={{ width: `${rightWidth}%`, backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '12px' }}>
               <NewsEditor
                 key={selectedArticle?.id || 'new_article'}
