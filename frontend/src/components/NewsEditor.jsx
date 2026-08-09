@@ -365,13 +365,20 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
             <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: '#e0f2fe', color: '#0369a1', borderRadius: '4px', fontWeight: 'bold' }}>🖐️ 編輯：{title || '新草稿'}</span>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               
-              {/* 💡 新增：點擊直接加入 Rundown 按鈕 */}
+              {/* 💡 點擊加入排播按鈕：自動解除抽稿並加入 Rundown */}
               <button 
                 onClick={() => {
                   if (!articleId) {
                     alert('⚠️ 請先點擊「存檔」產生稿件編號後，才能加入 Rundown！');
                     return;
                   }
+
+                  const targetNewStatus = articleStatus === 'DROPPED' ? 'DRAFT' : articleStatus;
+                  setArticleStatus(targetNewStatus);
+                  if (onArticleStatusChange && articleId) {
+                    onArticleStatusChange(articleId, targetNewStatus);
+                  }
+
                   const currentArticlePayload = {
                     id: articleId,
                     title: title || '（無標題新聞）',
@@ -380,15 +387,16 @@ export default function NewsEditor({ initialArticle, allArticles = [], onSelectA
                     newsFormat,
                     reviewStatus,
                     reviewer,
-                    status: articleStatus,
+                    status: targetNewStatus,
                     rundownItemId: `item_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     playStatus: 'UNPLAYED',
                     type: 'NEWS'
                   };
+
                   if (window.handleDirectAddToRundown) {
                     window.handleDirectAddToRundown(currentArticlePayload);
                   } else {
-                    alert('✅ 稿件已準備就緒！');
+                    alert('✅ 稿件已成功加入排播！');
                   }
                 }} 
                 style={{ padding: '5px 10px', backgroundColor: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
