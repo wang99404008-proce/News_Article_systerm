@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-const API_URL = 'http://localhost:3000/api/v1/articles';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = `${API_BASE_URL}/api/v1/articles`;
 
 export default function ArticleList({ onSelectArticle, onCreateNew }) {
   const [articles, setArticles] = useState([]);
