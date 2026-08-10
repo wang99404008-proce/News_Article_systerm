@@ -58,7 +58,7 @@ export default function App() {
   const [previewImage, setPreviewImage] = useState(null);
   const [editingFilename, setEditingFilename] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
-  const [copyStatus, setCopyStatus] = useState(false); // 複製成功提示狀態
+  const [copyStatus, setCopyStatus] = useState(false);
 
   const [slotMinutes, setSlotMinutes] = useState({ '0630': 15, '1200': 15, '1900': 15 });
   const [defaultBreakSeconds, setDefaultBreakSeconds] = useState(180);
@@ -293,7 +293,6 @@ export default function App() {
     }
   };
 
-  // 💡 複製圖片網址到剪貼簿功能
   const handleCopyImageUrl = (url) => {
     navigator.clipboard.writeText(url).then(() => {
       setCopyStatus(true);
@@ -726,7 +725,6 @@ export default function App() {
                           
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button onClick={handleSaveFilename} style={{ flex: 1, backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '6px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>儲存檔名</button>
-                            {/* 💡 新增：複製圖片網址按鈕 */}
                             <button onClick={() => handleCopyImageUrl(previewImage.url)} style={{ flex: 1, backgroundColor: '#0284c7', color: '#fff', border: 'none', padding: '6px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}>
                               {copyStatus ? '✨ 已複製網址！' : '📋 複製網址'}
                             </button>
@@ -824,6 +822,13 @@ export default function App() {
                               <div style={{ flex: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px', fontWeight: 'bold' }}>
                                 {item.title}
                               </div>
+
+                              {/* 💡 手機版補上上下移動按鈕 */}
+                              <div style={{ display: 'flex', gap: '2px', marginRight: '4px' }}>
+                                <button onClick={(e) => moveItemUp(index, e)} title="往上一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '2px 5px', fontSize: '10px', cursor: 'pointer' }}>▲</button>
+                                <button onClick={(e) => moveItemDown(index, e)} title="往下一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '2px 5px', fontSize: '10px', cursor: 'pointer' }}>▼</button>
+                              </div>
+
                               <div style={{ display: 'flex', gap: '4px' }}>
                                 {!isBreak && (
                                   <button onClick={(e) => toggleStatus(item.rundownItemId, e)} style={{ padding: '2px 6px', backgroundColor: statusConfig.bg, color: statusConfig.color, border: 'none', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold' }}>
