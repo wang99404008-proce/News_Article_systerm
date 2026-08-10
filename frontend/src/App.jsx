@@ -823,7 +823,6 @@ export default function App() {
                                 {item.title}
                               </div>
 
-                              {/* 💡 手機版補上上下移動按鈕 */}
                               <div style={{ display: 'flex', gap: '2px', marginRight: '4px' }}>
                                 <button onClick={(e) => moveItemUp(index, e)} title="往上一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '2px 5px', fontSize: '10px', cursor: 'pointer' }}>▲</button>
                                 <button onClick={(e) => moveItemDown(index, e)} title="往下一格" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '2px 5px', fontSize: '10px', cursor: 'pointer' }}>▼</button>
@@ -835,10 +834,11 @@ export default function App() {
                                     {statusConfig.label}
                                   </button>
                                 )}
+                                {/* 💡 抽稿按鈕改為沈穩的深灰色石墨色背景，與紅色刪除做強烈區隔 */}
                                 {!isBreak && (
-                                  <button onClick={(e) => handleDropItemFromRundown(item, e)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }} title="抽稿">🚫</button>
+                                  <button onClick={(e) => handleDropItemFromRundown(item, e)} style={{ backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '3px', padding: '2px 6px', fontSize: '10px', fontWeight: 'bold' }} title="抽稿">🚫</button>
                                 )}
-                                <button onClick={(e) => { e.stopPropagation(); updateCurrentRundown(currentRundown.filter(i => i.rundownItemId !== item.rundownItemId)); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }}>✕</button>
+                                <button onClick={(e) => { e.stopPropagation(); updateCurrentRundown(currentRundown.filter(i => i.rundownItemId !== item.rundownItemId)); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }} title="從清單移除">✕</button>
                               </div>
                             </div>
                           );
@@ -960,10 +960,11 @@ export default function App() {
                                 {statusConfig.label}
                               </button>
                             )}
+                            {/* 💡 電腦版抽稿按鈕改為沈穩的深灰色石墨色背景，與紅色刪除做強烈區隔 */}
                             {!isBreak && (
-                              <button onClick={(e) => handleDropItemFromRundown(item, e)} style={{ backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '3px', padding: '3px 6px', fontSize: '10px', fontWeight: 'bold' }} title="抽稿">🚫</button>
+                              <button onClick={(e) => handleDropItemFromRundown(item, e)} style={{ backgroundColor: '#334155', color: '#fff', border: '1px solid #475569', borderRadius: '3px', padding: '3px 6px', fontSize: '10px', fontWeight: 'bold' }} title="抽稿">🚫</button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); updateCurrentRundown(currentRundown.filter(i => i.rundownItemId !== item.rundownItemId)); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }}>✕</button>
+                            <button onClick={(e) => { e.stopPropagation(); updateCurrentRundown(currentRundown.filter(i => i.rundownItemId !== item.rundownItemId)); }} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '10px' }} title="從清單移除">✕</button>
                           </div>
                         </div>
                       );
